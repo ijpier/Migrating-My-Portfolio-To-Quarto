@@ -1,0 +1,34 @@
+project:
+  type: book
+
+book:
+  title: "Quarto book"
+  author: "Isley Jean-Pierre"
+  date: "2/20/2026"
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - 01-R-Script-Resubmission-Assignment.qmd
+    - 02-Continuing-Law-Firm-Analysis---Part-2-.qmd
+    - 03-Midterm.qmd
+    - 04-NBA---Analytics-Exploring-Team-Peformance-Through-Reproducible-Analysis.qmd
+    - 05-Florida-Crime-Analytics.qmd
+    - 06-Streaming-Analytics---Understanding-Platform-Popularity-Across-Age-Groups.qmd
+    - 07-Wage-Analytics---Predicting-High-vs-Low-Earners-Using-Logistics-Regression.qmd
+    - 08-Shiny-RMarkdown-Assignment.qmd
+    - 09-References.qmd
+    - summary.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+
+editor: visual
+

@@ -1,0 +1,252 @@
+---
+title: "Continuing Law Firm Analysis - Part 2"
+---
+
+# R Markdown
+
+Today, like the data scientist that I am, I am going to accomplish a monumental task that was assignment to me by my Law Firm. My goal is to investigate and answer three important questions.
+
+## Loading the data from NYC Open Data
+
+```{r}
+#| label: fetching-the-dataset
+#| message: false
+#| warning: true
+#| paged-print: false
+
+library(httr)
+library(jsonlite)
+endpoint<-"https://data.cityofnewyork.us/resource/nc67-uf89.json"
+
+resp <- GET(endpoint, query = list(
+  "$limit" = 99999,
+  "$order" = "issue_date DESC"
+))
+```
+
+```{r}
+camera <- fromJSON(content(resp, as = "text"), flatten = TRUE)
+```
+
+### First, cleaning the data
+
+```{r}
+#| label: loading-tidyverse
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(tidyverse)
+camera<- camera %>% 
+  mutate(across(
+    c("fine_amount","interest_amount","reduction_amount","payment_amount","amount_due","penalty_amount"),
+    ~as.numeric(.)
+  ))
+```
+
+Changing the contents that are non-numeric into numeric.
+
+### Filtering time correctly
+
+```{r}
+camera<- camera %>% 
+  filter(str_detect(issue_date,"^\\d{4}-\\d{2}-\\d{2}T"))
+```
+
+### Creating appropriate format format for issue_data
+
+```{r}
+camera$issue_date<- as.Date(camera$issue_date)
+camera$day_of_week<- weekdays(camera$issue_date)
+```
+
+### Fixing time (Part 1)
+
+```{r}
+camera<- camera %>%
+  mutate(
+    violation_time_clean= str_replace(violation_time,"(A|P)$"," \\1M"),
+    violation_time_24h= format(strptime(violation_time_clean, "%I:%M %p"), "%H:%M"))
+```
+
+### Fixing time (Part 2)
+
+```{r}
+camera<- camera %>%
+  mutate(
+    violation_time_24h_numeric = as.numeric(substr(violation_time_24h, 1, 2)),
+    time_of_day = case_when(
+      violation_time_24h_numeric >= 05 & violation_time_24h_numeric < 12 ~ "Morning",
+      violation_time_24h_numeric >= 12 & violation_time_24h_numeric < 17 ~ "Afternoon",
+      violation_time_24h_numeric >=17 & violation_time_24h_numeric < 24 ~ "Night"
+    )
+  )
+```
+
+## Do certain agencies issue higher payments?
+
+```{r}
+#| label: loading-mosaic-to-execute-favstats
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(mosaic)
+favstats(payment_amount ~ issuing_agency, data = camera) %>% arrange(desc(mean))
+```
+
+Let's look at what the stats say...
+
+## Let's look at an ANOVA analysis shows
+
+```{r}
+#| label: performing-anova-and-supernova-analysis
+#| message: false
+#| warning: true
+#| paged-print : false
+
+anova_model_a <- aov(payment_amount ~ issuing_agency, data = camera)
+summary(anova_model_a)
+library(supernova)
+supernova(anova_model_a)
+```
+
+The sum of squares here accounts for a reasonable amount of variation in the data, but it does not explain the larger portion of variation in the data. The F value is 10.587 with p \< 2e-16, which means that there is a statistical significant difference between certain agencies with some paying more money than others.
+
+## Graph (payment_amount & agency)
+
+```{r}
+
+#| label: payment-amount-per-agency
+#| message: false
+#| warning: true
+#| fig-cap: This graph shows payment amount per agency.
+#| fig-alt: This graph shows payment amount per agency.
+#| paged-print : false
+
+ggplot(camera, aes(x = issuing_agency, y = payment_amount)) + geom_boxplot() + theme_minimal() + coord_flip() + ggtitle("Boxplot of Payment Amount by Agency")
+```
+
+## Do drivers from different states (NY, NJ, CT) pay more?
+
+```{r}
+#| label: executing-favstats
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(mosaic)
+favstats(payment_amount ~ state, data = camera) %>% arrange(desc(mean))
+```
+
+It looks like drivers from NJ and NY pay quite a similar amount of money for ticket violations while drivers from CT pay less than both.
+
+## Let's look at what an ANOVA analysis shows
+
+```{r}
+#| label: anova-and-supernova-analysis
+#| message: false
+#| warning: true
+#| paged-print : false
+
+anova_model_s <- aov(payment_amount ~ state, data = camera)
+summary(anova_model_s)
+library(supernova)
+supernova(anova_model_s)
+```
+
+The sum of squares here accounts for a reasonable amount of variation in the data, but it does not explain the larger portion of variation in the data The F value is 14.212 with p \< 2e-16, which means that there is a statistical significant difference between drivers from different states paying more money than others.
+
+## Graph (payment_amount & drivers)
+
+```{r}
+
+
+#| label: payment-amount-by-states
+#| message: false
+#| warning: true
+#| fig-cap: This graphs shows how payment amount varies by states.
+#| fig-alt: This graphs shows how payment amount varies by states.
+#| paged-print : false
+
+ggplot(camera, aes(x = state, y = payment_amount)) + 
+  geom_boxplot() + 
+  theme_minimal() + 
+  coord_flip() +  # Flip the coordinates for horizontal orientation
+  theme(
+    axis.text.y = element_text(angle = 0, hjust = 1)
+    ) +
+  ggtitle("Boxplot of Payment Amount by State")
+```
+
+## Do certain counties tend to have higher payment amounts?
+
+### First, let's clean county by removing the abbraviations
+
+```{r}
+camera <- camera %>%
+  mutate(county = recode(county,
+                          "K" = "Kings County",
+                          "Kings" = "Kings County",
+                          "Q" = "Queens County",
+                          "M" = "Manhattan County",
+                          "B" = "Bronx County",
+                          "Bronx" = "Bronx County",
+                          "BK" = "Kings County",
+                          "ST" = "Staten Island County",
+                          "RICH" = "Rich County",
+                          "R" = "Rabun County",
+                          "Qns" = "Queens County",
+                          "QN" = "Queens County",
+                          "Q" = "Queens County",
+                          "NY" = "New York County",
+                          "MN" = "Marion County",
+                          "K" = "Kay County",
+                          "BX" = "Bronx County"))
+```
+
+### Let's get ready for data analysis
+
+```{r}
+#| label: payment-by-county
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(mosaic)
+favstats(payment_amount ~ county, data = camera) %>% arrange(desc(mean))
+```
+
+### Let's look at what an ANOVA analysis shows
+
+```{r}
+#| label: more-analysis
+#| message: false
+#| warning: true
+#| paged-print : false
+
+anova_model_c <- aov(payment_amount ~ county, data = camera)
+summary(anova_model_c)
+library(supernova)
+supernova(anova_model_c)
+```
+
+The sum of squares here accounts for a reasonable amount of variation in the data, but it does not explain the larger portion of variation in the data. The F value is 170.646 with p \< 2e-16, which means that there is a statistical significant difference between counties when it comes to the amount to money paid for traffic tickets. The F values also shows that "county" is a good predictor for the payment amount in this data set.
+
+## Graph (payment_amount & county)
+
+```{r}
+
+#| label: fig-payment-amount-by-counties
+#| message: false
+#| warning: true
+#| fig-cap: This graph shows how payment amount varies by counties.
+#| fig-alt: This graph shows how payment amount varies by counties.
+#| paged-print : false
+
+ggplot(camera, aes(x = county, y = payment_amount)) + geom_boxplot() + theme_minimal() + coord_flip() +   ggtitle("Boxplot of Payment Amount by Counties")
+```
+
+## Concluding Notes
+
+All three variables (agency, state, and county) were statistically significant based on their effects on the amount of money paid (payment_amount) for ticket violations. Although they results could not totally explain the portion of the variance that was unaccounted for, it looks like "county" is worth further investigation for potential marketing as it showed the larger F value out of the three.

@@ -1,0 +1,202 @@
+---
+title: "Wage Analytics - Predicting High vs Low Earners Using Logistic Regression"
+---
+
+# Wage Analytics - Investigating the High and Low Predictors of Wages
+
+In this assignment, I am tasked as data scientist to investigate the different factors that can predict high and low wages.
+
+## Creating the WageCategory Variable
+
+```{r}
+#| label: loading-libraries-and-dataset
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(ISLR)
+library(skimr)
+wage <- Default
+skim(wage)
+```
+
+```{r}
+#| label: creating-vector
+#| message: false
+#| warning: true
+#| paged-print : false
+
+median_wage <- median(Wage$wage, na.rm = TRUE)
+Wage$WageCategory <- ifelse(Wage$wage > median_wage, 
+                            "High",
+                            "Low")
+```
+
+```{r}
+#| label: tbl-wage-and-wagecategory
+#| message: false
+#| warning: true
+#| paged-print : false
+
+Wage$WageCategory <- as.factor(Wage$WageCategory)
+table(Wage$WageCategory)
+str(Wage$WageCategory)
+```
+
+## Data Cleaning
+
+```{r}
+vars_to_clean <- c("maritl", "race", "education", "region",
+                   "jobclass", "health", "health_ins")
+
+Wage[vars_to_clean] <- lapply(Wage[vars_to_clean], function(x) {
+  x <- gsub("^[0-9]+\\.\\s*", "", x)  
+  factor(x)
+})
+head(Wage)
+```
+
+## Classical Statistical Tests (A)
+
+```{r}
+tapply(Wage$age, Wage$WageCategory, mean)
+t_test_result <- t.test(age ~ WageCategory, data = Wage)
+t_test_result
+```
+
+The mean for High wage earners is 44.67, and the mean for Low wage earners is 40.20. The t test shows that there is statistical difference between the two groups, which means that those who earn higher wages are more likely to be older than those who don't.
+
+### Classical Statistical Tests (B)
+
+```{r}
+#| label: running-anova
+#| message: false
+#| warning: true
+#| paged-print : false
+
+wage_job <- aov(wage ~ jobclass, data = Wage)
+summary(wage_job)
+wage_job
+```
+
+A one-way ANOVA was conducted to examine if jobclass had an influence on wage. The ANOVA test revealed that there was a significant effect of jobclass on wage, F(1, 2998) = 134.1, p \< 2e-16. It seems like different jobs lead to higher wages. Judging from this dataset, Information jobs provide higher wages than Industrial jobs.
+
+### Classical Statistical Tests (C)
+
+```{r}
+#| label: tbl-maritl-and-wagecategory
+#| message: false
+#| warning: true
+#| paged-print : false
+
+tab <- table(Wage$maritl, Wage$WageCategory)
+tab
+```
+
+```{r}
+#| label: running-chi-square
+#| message: false
+#| warning: true
+#| paged-print : false
+
+chi_result <- chisq.test(tab)
+chi_result
+```
+
+```{r}
+#| label: analyzing-cramers-v
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(DescTools)
+CramerV(tab)
+```
+
+X\^2 = 212.51 with a p-value \< 2.2x10\^-16. Cramer's V is 0.27. The chi-square analysis indicates that wage is significantly affected by marital status, and Cramer's V result (effect size = 0.27) means that there is an association between marital status and wage.
+
+## Logistic Regression Model
+
+```{r}
+#| label: running-regression-model
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(caTools)
+set.seed(123)
+split <- sample.split(Wage$WageCategory, SplitRatio = 0.7)
+train <- subset(Wage, split == TRUE)
+test  <- subset(Wage, split == FALSE)
+```
+
+```{r}
+my_model <- glm(WageCategory ~ age + jobclass + education + maritl, data = train, family = binomial)
+summary(my_model)
+```
+
+```{r}
+exp(coef(my_model))
+```
+
+It seems like age, education, and maritl are significant predictors for wage, specifically the High wage category. Older age is associate with a slight decrease of being in the High wage category (OR = 0.98 per year). Education seems to have the largest effect in wage (OR = 0.04). Marital status also reduces the odds of being in the High wage category (OR = 0.42). It's interesting that jobclass shows no effect on age considering some prior data analysis.
+
+## Model Evaluation on Test Data
+
+```{r}
+test$pred_prob <- predict(my_model, newdata = test, type = "response")
+```
+
+Prediction for High wage.
+
+```{r}
+test$pred_class <- ifelse(test$pred_prob >= 0.5, "High", "Low")
+```
+
+Prediction for classes.
+
+```{r}
+test$pred_class <- factor(test$pred_class, levels = c("Low", "High"))
+```
+
+Labeling.
+
+```{r}
+#| label: running-confusion-matrix
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(caret)
+cm <- confusionMatrix(test$pred_class, test$WageCategory, positive = "High")
+cm
+```
+
+Confusion Matrix.
+
+```{r}
+#| label: fig-roc-wagecategory-pred-prob
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(pROC)
+roc_wage <- roc(test$WageCategory, test$pred_prob, levels = c("Low", "High"), direction = "<")
+plot(roc_wage, col = "blue", main = "ROC Curve")
+```
+
+ROC Curve.
+
+```{r}
+auc(roc_wage)
+```
+
+AUC value.
+
+## Final Interpretation
+
+The goal of this project was to investigate how different variables contribute to wage. A t-test and ANOVA revealed that wage was significantly affected by age, jobclass, and education. I saw that older ages were associated with higher earnings.
+
+A logistic regression model was built to figure out which variables could predict the probability of being in the High wage category compared to Low wage category. Judging by the results, age, job class, education, and marital status were statistically significant in predicting wage categories. Although, sometimes depending on the analysis there were a couple of times where some predictors were non-significant.
+
+Testing the new model on unseen showed poor predictions when it comes to Accuracy (29.2%), Sensitivity (38.3%), Specificity (31%), and ROC/AUC (0.225). It seems like this model could not distinguish between High and Low earners. Overall, age, education, job class, and marital status were significantly associated with wage. However, the logistic regression model is not reliable enough to predict wage categories with the new data. In terms of repeating the analysis, I would add years of experience, hours worked (part-time and full-time), and location (city vs suburb).

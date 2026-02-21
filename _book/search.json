@@ -1,0 +1,42 @@
+[
+  {
+    "objectID": "references.html#r-if-knitris_html_output-references-----librarytidyverse---libraryshiny---librarytidyverse---librarynycopendata---librarydt---libraryislr---libraryskimr---librarydesctools---librarycatools---librarycaret---libraryproc---libraryreadxl---libraryggthemes---librarypheatmap---librarypatchwork---libraryhmisc---libraryggcorrplot---libraryppcor---librarydplyr---librarysupernova---librarymosaic---libraryhttr---libraryjsonlite---libraryhms---libraryknitr---libraryggplot2",
+    "href": "references.html#r-if-knitris_html_output-references-----librarytidyverse---libraryshiny---librarytidyverse---librarynycopendata---librarydt---libraryislr---libraryskimr---librarydesctools---librarycatools---librarycaret---libraryproc---libraryreadxl---libraryggthemes---librarypheatmap---librarypatchwork---libraryhmisc---libraryggcorrplot---libraryppcor---librarydplyr---librarysupernova---librarymosaic---libraryhttr---libraryjsonlite---libraryhms---libraryknitr---libraryggplot2",
+    "title": "References",
+    "section": "r if (knitr::is_html_output()) ' # References {-} ' - library(tidyverse) - library(shiny) - library(tidyverse) - library(nycOpenData) - library(DT) - library(ISLR) - library(skimr) - library(DescTools) - library(caTools) - library(caret) - library(pROC) - library(readxl) - library(ggthemes) - library(pheatmap) - library(patchwork) - library(Hmisc) - library(ggcorrplot) - library(ppcor) - library(dplyr) - library(supernova) - library(mosaic) - library(httr) - library(jsonlite) - library(hms) - library(knitr) - library(ggplot2)",
+    "text": "r if (knitr::is_html_output()) ' # References {-} ' - library(tidyverse) - library(shiny) - library(tidyverse) - library(nycOpenData) - library(DT) - library(ISLR) - library(skimr) - library(DescTools) - library(caTools) - library(caret) - library(pROC) - library(readxl) - library(ggthemes) - library(pheatmap) - library(patchwork) - library(Hmisc) - library(ggcorrplot) - library(ppcor) - library(dplyr) - library(supernova) - library(mosaic) - library(httr) - library(jsonlite) - library(hms) - library(knitr) - library(ggplot2)",
+    "crumbs": [
+      "References"
+    ]
+  },
+  {
+    "objectID": "intro.html",
+    "href": "intro.html",
+    "title": "1  Introduction",
+    "section": "",
+    "text": "This is a book created from markdown and executable code.\nThis Quarto project showcases my ability to apply and use R based on everything that I have learned and mastered in my coding class, Reproducible Psychology Research (Fall 2025). This is hands-down the coolest assignment of the semester! This Bookdown project is also the culmination of all the work that I have done. From simple R-Script writing, to doing correlation, to performing ANOVA, and creating and submitting assignments in rmd and html format through RMarkdown and Shiny. Each section tells the journey of what I have learned and what I hope to apply in my future projects.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+    ]
+  },
+  {
+    "objectID": "summary.html",
+    "href": "summary.html",
+    "title": "2  Summary",
+    "section": "",
+    "text": "In summary, this book has no content whatsoever.\n\n1 + 1\n\n[1] 2",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Summary</span>"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Quarto book",
+    "section": "",
+    "text": "Preface\nThis is a Quarto book.\nTo learn more about Quarto books visit https://quarto.org/docs/books.",
+    "crumbs": [
+      "Preface"
+    ]
+  }
+]

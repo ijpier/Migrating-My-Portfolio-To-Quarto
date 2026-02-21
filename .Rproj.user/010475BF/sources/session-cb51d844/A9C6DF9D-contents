@@ -1,0 +1,294 @@
+---
+title: "Midterm"
+---
+
+# Midterm – Exercise & Sleep
+
+This exam is testing my ability to showcase what I have learned so far during the first half of the semester.
+
+## Setup & Data Import
+
+```{r}
+#| label: loading-the-library-and-dataset-1
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(readxl)
+participant_info_midterm <- read_excel("data/midterm_sleep_exercise.xlsx", sheet = 1)
+head(participant_info_midterm)
+```
+
+```{r}
+#| label: loading-library-and-dataset-2
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(readxl)
+sleep_data_midterm <- read_excel("data/midterm_sleep_exercise.xlsx", sheet = 2)
+head(sleep_data_midterm)
+head(sleep_data_midterm)
+```
+
+## Merge & Base Cleaning
+
+```{r}
+#| label: making-changes-to-the-dataset
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(tidyverse)
+participant_info_midterm <- participant_info_midterm %>%
+  mutate(Exercise_Group = recode(Exercise_Group,
+                                  "NONE" = "None",
+                                  "Nonee" = "None",
+                                  "N" = "None",
+                                  "C" = "Cardio",
+                                  "weights" = "Weights",
+                                  "WEIGHTZ" = "Weights",
+                                  "WEIGHTS" = "Weights",
+                                  "WEIGHTSSS" = "Weights",
+                                  "CW" = "Cardio+Weights",
+                                  "C+W" = "Cardio+Weights",
+                                  ))
+head(participant_info_midterm)
+```
+
+```{r}
+#| label: creating-vector
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(tidyverse)
+participant_info_midterm <- participant_info_midterm %>%
+  mutate(Sex = recode(Sex,
+                      "Malee" = "Male",
+                      "Femalee" = "Female",
+                      "F" = "Female",
+                      "M" = "Male",
+                      "Fem" = "Female",
+                      "MALE" = "Male",
+                      "Mal" = "Male",
+                      ))
+head(participant_info_midterm)
+```
+
+```{r}
+participant_sleep_merge <- merge(participant_info_midterm, sleep_data_midterm, by="ID")
+head(participant_sleep_merge)
+```
+
+## Create Derived Variable
+
+```{r}
+participant_sleep_merge <- participant_sleep_merge %>%
+  separate(Pre_Sleep, into = c("Text", "Pre_Sleep_New"), sep = "(?<=\\D)(?=\\d)", remove = FALSE)
+```
+
+```{r}
+participant_sleep_merge$Pre_Sleep_New <- as.numeric(participant_sleep_merge$Pre_Sleep_New)
+participant_sleep_merge <- participant_sleep_merge %>% dplyr::select(-Pre_Sleep, -Text)
+head(participant_sleep_merge)
+```
+
+```{r}
+participant_sleep_merge <- participant_sleep_merge %>%
+  mutate(Sleep_Difference = Post_Sleep - Pre_Sleep_New)
+head(participant_sleep_merge)
+```
+
+```{r}
+participant_sleep_merge <- participant_sleep_merge %>% 
+  mutate(AgeGroup2 = case_when(
+  Age < 40 ~ "<40",
+  Age >= 40 ~ ">=40",
+  TRUE ~ NA_character_
+))
+head(participant_sleep_merge)
+```
+
+```{r}
+participant_sleep_merge <- participant_sleep_merge %>%
+  filter(!is.na(Sleep_Difference))
+head(participant_sleep_merge)
+```
+
+## Descriptive Statistics
+
+```{r}
+#| label: loading-loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(dplyr)
+stat_1 <- participant_sleep_merge %>%
+  dplyr::summarize(
+    mean_sleep_diff = mean(Sleep_Difference, na.rm = TRUE),
+    sd_sleep_diff = sd(Sleep_Difference, na.rm = TRUE),
+    min_sleep_diff = min(Sleep_Difference, na.rm = TRUE),
+    max_sleep_diff = max(Sleep_Difference, na.rm = TRUE),
+    mean_sleep_eff = mean(Sleep_Efficiency, na.rm = TRUE),
+    sd_sleep_eff = sd(Sleep_Efficiency, na.rm = TRUE),
+    min_sleep_eff = min(Sleep_Efficiency, na.rm = TRUE),
+    max_sleep_eff = max(Sleep_Efficiency, na.rm = TRUE)
+  )
+print(stat_1)
+```
+
+### Reporting statistics
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(dplyr)
+stat_2 <- participant_sleep_merge %>%
+  group_by(Exercise_Group) %>%
+  dplyr::summarize(
+    mean_sleep_diff = mean(Sleep_Difference, na.rm = TRUE),
+    sd_sleep_diff = sd(Sleep_Difference, na.rm = TRUE),
+    min_sleep_diff = min(Sleep_Difference, na.rm = TRUE),
+    max_sleep_diff = max(Sleep_Difference, na.rm = TRUE),
+    mean_sleep_eff = mean(Sleep_Efficiency, na.rm = TRUE),
+    sd_sleep_eff = sd(Sleep_Efficiency, na.rm = TRUE),
+    min_sleep_eff = min(Sleep_Efficiency, na.rm = TRUE),
+    max_sleep_eff = max(Sleep_Efficiency, na.rm = TRUE)
+  )
+print(stat_2)
+```
+
+## Visualizations (3 plots)
+
+```{r}
+#| label: fig-sleep-difference-by-group
+#| message: false
+#| warning: true
+#| fig-cap: This graph shows sleep difference when categorized by exercise group.
+#| fig-alt: This graph shows sleep difference when categorized by exercise group.
+#| paged-print : false
+
+ggplot(participant_sleep_merge, aes(x = Exercise_Group, y = Sleep_Difference)) +
+  geom_boxplot(aes(fill = Exercise_Group), color = "black") +
+  labs(title = "Boxplot of Sleep_Difference by Exercise Group",
+       x = "Exercise Group",
+       y = "Sleep Difference") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+#| label: fig-sleep-efficieny-by-exercise-group
+#| message: false
+#| warning: true
+#| fig-cap: This graph shows sleep efficiency when categorized by exercise group.
+#| fig-alt: This graph shows sleep difference when categorized by exercise group.
+#| paged-print : false
+
+ggplot(participant_sleep_merge, aes(x = Exercise_Group, y = Sleep_Efficiency)) +
+  geom_boxplot(aes(fill = Exercise_Group), color = "black") +
+  labs(title = "Boxplot of Sleep_Efficiency by Exercise Group",
+       x = "Exercise Group",
+       y = "Sleep Efficiency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+#| label: fig-sleep-efficiency-and-sleep-difference-by-participants
+#| message: false
+#| warning: true
+#| fig-cap: This graph shows sleep efficiency/difference when categorized by participants.
+#| fig-alt: This graph shows sleep efficiency/difference when categorized by participants.
+#| paged-print : false
+
+ggplot(participant_sleep_merge, aes(x = Sleep_Efficiency, y = Sleep_Difference)) +
+  geom_point(aes(color = Exercise_Group), alpha = 0.7) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  labs(title = "Scatterplot of Sleep_Difference vs Sleep_Efficiency with Trend Line",
+       x = "Sleep Efficiency",
+       y = "Sleep Difference") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+## T-tests (Two)
+
+### T-test 1: Sleep_Difference \~ Sex
+
+```{r}
+t_test_sex <- t.test(Sleep_Difference ~ Sex, data = participant_sleep_merge)
+t_test_sex
+```
+
+There is no significant difference between males (mean = 1.00) and females (mean = 1.22) during sleep when the p-value is 0.14.
+
+### T-test 2: Sleep_Difference \~ AgeGroup2
+
+```{r}
+t_test_agegroup <- t.test(Sleep_Difference ~ AgeGroup2, data = participant_sleep_merge)
+t_test_agegroup
+```
+
+There is no significant difference between peope under 40 (mean = 1.05) and people equal to or over 40 (mean = 1.35) during sleep when the p-value is 0.10.
+
+## Anovas (two) + Post-Hocs
+
+```{r}
+anova_A <- aov(Sleep_Difference ~ Exercise_Group, data = participant_sleep_merge)
+summary(anova_A)
+library(supernova)
+supernova(anova_A)
+```
+
+The F value is 11.188, the p-value is 0.00, with degree of freedom being 85. Based on those results, there is significant difference effect of Exercise_Group on Sleep_Difference.
+
+```{r}
+tukey_result_a <- TukeyHSD(anova_A)
+tukey_result_a
+```
+
+It seems like Exercise_Group has a significant influence on Sleep_Difference(Cardio, Cardio+Weights, and Weights) compare to no exercise at all. Although, the Weights and Cardio+Weights groups did not show significant differences when compared to each other, nor with the None group in some instances. Carddio seems to show the least amount of difference from the other groups for Sleep_Difference.
+
+```{r}
+anova_B <- aov(Sleep_Efficiency ~ Exercise_Group, data = participant_sleep_merge)
+summary(anova_B)
+library(supernova)
+supernova(anova_B)
+```
+
+The F value is 4.438, the p-value is 0.00, with degree of freedom being 85. Based on those results, there is significant difference effect of Exercise_Group on Sleep_Difference.
+
+```{r}
+tukey_result_b <- TukeyHSD(anova_B)
+tukey_result_b
+```
+
+It seems like Exercise_Group or type has a significant influence on Slee_Efficiency because the exercise type can at least explain a portion of the variation in Sleep_Effiency.
+
+## Synthesis & Recommendation
+
+Looking at Sleep_Difference and Sleep_Efficiency, I think that Cardio+Weights is a good candidate for improving sleep. The results showed that Exercise_Group significantly improved sleep quality in Sleep_Difference compared Sleep_Efficiency (11.188 and p = 0.00 for Sleep_Difference and 4.432 and p = 0.00 for Sleep_Efficiency). That means, Exercise_Group had a significant on sleep overall. The Tukey provides more in depth analysis on how effective different type of exercises are.
+
+## Reflection
+
+I found cleaning the columns somewhat difficult. I would create or delete columns that I totally need while the ones that I do not remained. I guess that is a an error on my part. I also found the ANOVA part somewhat challenging. With so many numbers in a table, I could not keep track on what I should pay attention to the most and reporting the F-value for different exercise type was not exactly easy as the table was not really intuitive in letting you know what the numbers really mean.
+
+### Checklist
+
+-   \[y\] Imported both sheets and merged cleanly on ID
+-   \[y\] Cleaned Pre_Sleep to numeric and created Sleep_Difference
+-   \[y\] Created AgeGroup2 (two-level) via case_when
+-   \[y\] Produced descriptive statistics for both outcomes
+-   \[y\] Made 3 clear plots with labels/titles
+-   \[y\] Ran TWO t-tests (Sex, AgeGroup2) on Sleep_Difference
+-   \[y\] Ran TWO ANOVAs (Exercise_Group) on Sleep_Difference and Sleep_Efficiency
+-   \[y\] Performed Tukey post-hoc tests and interpreted pairwise differences
+-   \[y\] Verified that all figures and tables display meaningful, readable labels and legends.
+-   \[y\] Wrote a concise recommendation supported by stats and visuals
+-   \[y\] Converted this work into an R Markdown report with narrative + code

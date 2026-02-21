@@ -1,0 +1,193 @@
+---
+title: "01-R-Script-Resubmission-Assignment"
+---
+
+# R-Script
+
+In this assignment, I learned how to pull datasets from online databases and how to clean and prepare them for data analysis. Note: the shooting data was apparently removing from NYC OpenData, so now I will be using the CSV file instead. Below is what the original code looks like.
+
+## Cleaning the data
+
+```{text}
+# Using an API to call the data ####
+endpoint <- "https://data.cityofnewyork.us/resource/833y-fsy8.json"
+
+# Example: get 5,000 most recent rows
+resp <- GET(endpoint, query = list(
+  "$limit" = 30000,
+  "$order" = "OCCUR_DATE DESC"
+))
+
+# Parse JSON into R dataframe
+shooting_data <- fromJSON(content(resp, as = "text"), flatten = TRUE)
+```
+
+```{r}
+#| label: loading-dataset
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(readr)
+shooting_data <- read_csv("NYPD_Shooting_Incident_Data__Historic__20250910.csv")
+head(shooting_data)
+```
+
+Here I gathered the NYC shooting data by using a code to bring it into R.
+
+### Removing NAs
+
+```{r}
+#| label: loading-libraries and cleaning data
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(tidyverse)
+library(dplyr)
+shooting_data <- shooting_data %>% filter(!is.na(geocoded_column.type))
+```
+
+With this code I removed NAs from geocoded_column.type.
+
+### Making values lowercase
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+shooting_data$perp_race <- tolower(shooting_data$perp_race)
+```
+
+I transformed uppercase letters to lowercase from the perp_race column.
+
+### Creating time_of_day column (Morning, Afteroon, Evening)
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(hms)
+shooting_data <- shooting_data %>%
+  mutate(
+    occur_time = as_hms(occur_time),
+    time_of_day=case_when(
+      hour(occur_time)>=0 & hour(occur_time)<12 ~"morning", 
+      hour(occur_time)>12 & hour(occur_time)<20 ~"afternoon", 
+      TRUE ~"night"
+    ))
+```
+
+I tried re-running the codes based on your suggestions, and it worked. I also changed the value for the for the hours just to see if it made a difference.
+
+## Insight 1
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+time_of_day <- shooting_data %>%
+  count(time_of_day, sort = TRUE)
+time_of_day
+```
+
+## Insight 2
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+vic_sex_counts <- shooting_data %>%
+  count(vic_sex, sort = TRUE)
+vic_sex_counts
+```
+
+I looked into the sex of the victims to see how crime is distributed across genders.
+
+## Tables & Graphs
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(knitr)
+shooting_data <- head(shooting_data)
+shooting_data
+kable(shooting_data)
+```
+
+I still don't really get what kable does... I kept getting errors for it at first, but somehow it's working now.
+
+## Graph 1
+
+```{r fig.cap="This figure shows time of day and the number of shootings."}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(ggplot2)
+ggplot(shooting_data, aes(x = time_of_day, fill = time_of_day)) +
+  geom_bar() +
+  labs(
+    title = "Shootings by Time of Day",
+    x = "Time of Day",
+    y = "Number of Shootings"
+  ) +
+  theme_minimal(base_size = 14) +
+  scale_fill_brewer(palette = "Set2") +
+  theme(legend.position = "none")
+```
+
+Ahhhhhh, time_of_day is finally working!!!!!
+
+## Graph 2
+
+```{r fig.cap="This graph shows victim counts per sex."}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(ggplot2)
+ggplot(vic_sex_counts, aes(x = vic_sex, y = n, fill = vic_sex)) +
+  geom_col() +
+  labs(
+    title = "Victim Sex Count",
+    x = "Victim Sex",
+    y = "Count"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Pastel1") +
+  theme(legend.position = "none")
+knitr::kable(vic_sex_counts)
+```
+
+This code allows me to have a visual representation of victims of crimes when it comes to males and females.
+
+## nrows
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+nrow(shooting_data)
+```
+
+This code tells me there number of rows that remain after I cleaned up the data.
+
+## Notes
+
+This is my second time doing this assignment. I got the chance to use the feedback and go over my lines of codes to see where I messed up. It was very helpful to do that, as I now have a better understanding when it comes to working with RMarkdown and still using R codes. I did get a few errors here and there, but this time around it was wayyyy easier to figured where they occurred in the script.
