@@ -175,4 +175,3 @@ pcor.test(all_stats$PRA, all_stats$STOCKS, all_stats$Age, method = "pearson")
 ## Communicate Your Findings
 
 I have no idea what's going on with my functions! I can't plot nor read the graphs to come to a conclusion.! (In retrospect, this was a really fun assignment.) These were my initial thoughts and challengers encounters when I first submitted this assignment. After I was giving some time to personally work on it, I was able to make sure that the codes ran perfectly with some much needed assistance. Look out for a much more polish version in the next few weeks!
-

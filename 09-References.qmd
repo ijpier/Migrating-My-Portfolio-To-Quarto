@@ -2,30 +2,31 @@
 title: "References"
 ---
 
-## `r if (knitr::is_html_output()) ' # References {-} '` 
-- library(tidyverse) 
-- library(shiny) 
-- library(tidyverse)
-- library(nycOpenData) 
-- library(DT) 
-- library(ISLR) 
-- library(skimr) 
-- library(DescTools) 
-- library(caTools) 
-- library(caret) 
-- library(pROC) 
-- library(readxl) 
-- library(ggthemes) 
-- library(pheatmap) 
-- library(patchwork) 
-- library(Hmisc) 
-- library(ggcorrplot) 
-- library(ppcor) 
-- library(dplyr) 
-- library(supernova) 
-- library(mosaic) 
-- library(httr) 
-- library(jsonlite) 
-- library(hms) 
-- library(knitr) 
-- library(ggplot2)
+## 
+
+-   tidyverse
+-   shiny
+-   tidyverse
+-   nycOpenData
+-   DT
+-   ISLR
+-   skimr
+-   DescTools
+-   caTools
+-   caret
+-   pROC
+-   readxl
+-   ggthemes
+-   pheatmap
+-   tchwork
+-   Hmisc
+-   ggcorrplot
+-   ppcor
+-   dplyr
+-   supernova
+-   mosaic
+-   httr
+-   jsonlite
+-   hms
+-   knitr
+-   ggplot2

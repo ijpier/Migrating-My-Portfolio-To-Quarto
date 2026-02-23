@@ -5,10 +5,9 @@ book:
   title: "First-ever Quarto Book"
   author: "Isley Jean-Pierre"
   date: "2/15/2026"
-  cover-image: QB/cover.png
+  cover-image: QB.png
   chapters:
     - index.qmd
-    - intro.qmd
     - 01-R-Script-Resubmission-Assignment.qmd
     - 02-Continuing-Law-Firm-Analysis---Part-2-.qmd
     - 03-Midterm.qmd
