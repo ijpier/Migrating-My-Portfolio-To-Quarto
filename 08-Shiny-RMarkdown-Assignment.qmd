@@ -1,0 +1,58 @@
+---
+title: "Shiny RMarkdown Assigment"
+---
+
+# Shiny Apps and RMarkdown
+
+In this assignment, I am going to explore the **nyc_dop_juvenile_rearrest_rate dataset** to test my coding skills with shiny apps and RMarkdown.
+
+## Loading my libraries
+
+```{r}
+#| label: loading-libraries
+#| message: false
+#| warning: true
+#| paged-print : false
+
+library(shiny)
+library(tidyverse)
+library(nycOpenData)
+library(DT)
+```
+
+## Calling my data
+
+Let's bring the data for the assignment.
+
+```{r}
+#| label: loading-dataset
+#| message: false
+#| warning: true
+#| paged-print : false
+
+data_rr <- nyc_dop_juvenile_rearrest_rate(limit = 10000)
+head(data_rr)
+```
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change. This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r eruptions, echo=FALSE}
+inputPanel(
+  selectInput("month", "Choose a Month:",
+         choices = c("January", "February",   "March", "April", "May", "June", "July", 
+  "August", "September", "October", 
+  "November", "December")),
+  sliderInput("top_n", "Year:", 2015, 2020, 2025)
+)
+
+renderPlot({
+  data_rr %>%
+        filter(month == input$month) %>%
+        count(rate, sort = T) %>%
+        slice_head(n=input$top_n) %>%
+        ggplot(aes(n,fct_reorder(rate, n))) +
+        geom_col(fill = "lightblue")
+    })
+```
