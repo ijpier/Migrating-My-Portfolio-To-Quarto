@@ -29,7 +29,7 @@ shooting_data <- fromJSON(content(resp, as = "text"), flatten = TRUE)
 #| paged-print : false
 
 library(readr)
-shooting_data <- read_csv("NYPD_Shooting_Incident_Data__Historic__20250910.csv")
+shooting_data <- read::read_csv("NYPD_Shooting_Incident_Data__Historic__20250910.csv")
 head(shooting_data)
 ```
 
